@@ -218,20 +218,25 @@ async function saveNewEventModal() {
 }
 
 // --- EVENTS ---
-async function loadEvents() {
-  try {
-    const [eventsRes, tiersRes] = await Promise.all([fetch(`${API}/events`), fetch(`${API}/tiers`)]);
-    allEvents = await eventsRes.json();
-    allTiers = await tiersRes.json();
-
-    document.getElementById('tiers-legend').innerHTML = allTiers.map(t => `
+function renderTiersLegend() {
+  document.getElementById('tiers-legend').innerHTML = [...allTiers]
+    .sort((a, b) => b.min_points - a.min_points)
+    .map(t => `
       <div class="tier-badge">
         <div class="tier-dot" style="background:${TIER_COLORS[t.name] || '#888'}"></div>
         <span style="color:${TIER_COLORS[t.name] || '#888'}">${t.name} TIER</span>
         <span style="color:#666">${t.min_points}+</span>
       </div>
     `).join('');
+}
 
+async function loadEvents() {
+  try {
+    const [eventsRes, tiersRes] = await Promise.all([fetch(`${API}/events`), fetch(`${API}/tiers`)]);
+    allEvents = await eventsRes.json();
+    allTiers = await tiersRes.json();
+
+    renderTiersLegend();
     renderEvents();
     updateSortHeaders();
   } catch(e) {
@@ -590,7 +595,7 @@ async function viewSeason(id) {
     document.getElementById('season-banner').style.display = '';
     document.getElementById('archive-season-btn').style.display = 'none';
     document.getElementById('new-season-btn').style.display = 'none';
-    renderEvents(); renderPlayers(); renderTiers();
+    renderTiersLegend(); renderEvents(); renderPlayers(); renderTiers();
     switchTab('events', document.querySelectorAll('nav button')[0]);
   } catch(e) {}
 }
